@@ -120,6 +120,11 @@ body {
     left: 0;
     top: 0; /* Đảm bảo các trang xếp chồng lên nhau từ góc trên bên trái */
     overflow: hidden; /* Đảm bảo nội dung không tràn ra ngoài */
+
+    /* --- BỔ SUNG ĐỂ GIẢM NHẤP NHÁY VÀ TỐI ƯU RENDER --- */
+    transform: translateZ(0); /* Buộc trình duyệt tạo lớp đồ họa riêng */
+    will-change: transform, z-index; /* Báo hiệu thuộc tính sẽ thay đổi */
+    perspective-origin: 50% 50%; /* Có thể giúp cải thiện render trên một số trình duyệt */
 }
 
 .page::before {
@@ -136,34 +141,38 @@ body {
 /* Trang chẵn sẽ lật từ phải */
 .page:nth-child(even) {
     transform-origin: right center;
+    transform: rotateY(0deg) translateZ(0); /* Đảm bảo translateZ(0) cho trạng thái ban đầu */
 }
 
 /* Đảm bảo các trang không phải bìa bắt đầu ở trạng thái không lật */
 .page:not(.cover-page) {
-    transform: rotateY(0deg);
+    transform: rotateY(0deg) translateZ(0); /* Đảm bảo translateZ(0) cho trạng thái ban đầu */
 }
 
 /* Khi trang được lật */
 .page.flipped {
-    transform: rotateY(-180deg); /* Lật 180 độ */
+    transform: rotateY(-180deg) translateZ(0); /* Đảm bảo translateZ(0) khi lật */
     /* Z-index sẽ được quản lý bởi JS thông qua các class khác */
 }
 
 /* Khi trang chẵn được lật */
 .page:nth-child(even).flipped {
-    transform: rotateY(180deg); /* Trang chẵn lật ngược lại (180 độ dương) */
+    transform: rotateY(180deg) translateZ(0); /* Đảm bảo translateZ(0) khi lật */
 }
 
 /* --- Z-index management classes --- */
 /* Class tạm thời khi lật tiến (trang hiện tại đang lật) */
 .page.is-flipping-forward {
     z-index: 999; /* Đảm bảo trang này ở trên cùng trong quá trình lật */
+    transform: rotateY(0deg) translateZ(0); /* Đảm bảo translateZ(0) khi đang lật */
 }
 
 /* Class tạm thời khi lật lùi (trang cần hiển thị đang lật ngược lại) */
 .page.is-flipping-backward {
     z-index: 999; /* Đảm bảo trang này ở trên cùng trong quá trình lật */
+    transform: rotateY(0deg) translateZ(0); /* Đảm bảo translateZ(0) khi đang lật */
 }
+
 
 /* Page Content */
 .page-content {
@@ -530,6 +539,7 @@ body {
         padding: 20px; /* Giảm padding */
         flex-direction: column; /* Đảm bảo bố cục dọc */
         text-align: center;
+        transform: translateZ(0); /* Đảm bảo tối ưu render trên mobile */
     }
 
     .page-content {
@@ -620,6 +630,7 @@ body {
         padding: 15px; /* Giảm padding thêm cho ngang */
         flex-direction: row; /* Bố cục ngang */
         text-align: left;
+        transform: translateZ(0); /* Đảm bảo tối ưu render trên mobile */
     }
 
     .page-content {
@@ -676,16 +687,16 @@ body {
     }
 
     .page-title {
-        font-size: 1.6em; /* Rất nhỏ cho tiêu đề */
+        font-size: 1.6em;
     }
 
     .page-text {
-        font-size: 0.8em; /* Rất nhỏ cho văn bản */
+        font-size: 0.8em;
         line-height: 1.3;
     }
 
     .page-image {
-        width: 85%; /* Tăng ảnh một chút */
+        width: 85%;
         max-width: 200px;
         margin-bottom: 10px;
     }
@@ -695,7 +706,7 @@ body {
     }
 
     .cover-page .page-text {
-        font-size: 1em;
+        font-size: 1.0em; /* Cập nhật 1.1em thành 1.0em */
     }
 
     .start-button {
