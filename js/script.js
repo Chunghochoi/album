@@ -21,8 +21,8 @@ const musicFilePath = 'audio/new_song.mp3'; // Đảm bảo đường dẫn này
 // --- Music Functions ---
 function setupMusic() {
     audio = new Audio(musicFilePath);
-    audio.loop = true;
-    audio.volume = 0.5;
+    audio.loop = true; // Lặp lại bài hát
+    audio.volume = 0.5; // Đặt âm lượng (0.0 đến 1.0)
 
     audio.addEventListener('ended', () => {
         console.log('Nhạc đã kết thúc.');
@@ -31,6 +31,7 @@ function setupMusic() {
 
     audio.addEventListener('error', (e) => {
         console.error('Lỗi khi phát nhạc:', e);
+        // Có thể hiển thị thông báo lỗi cho người dùng nếu cần
     });
 }
 
@@ -40,7 +41,9 @@ function startMusic() {
             isPlaying = true;
             console.log('Nhạc đang phát.');
         }).catch(error => {
+            // Đây là lỗi khi trình duyệt chặn autoplay.
             console.error('Không thể phát nhạc tự động. Người dùng cần tương tác:', error);
+            // Bạn có thể hiển thị một thông báo hoặc nút "Bật nhạc" ở đây
         });
     } else {
         console.error('Đối tượng Audio chưa được khởi tạo.');
@@ -50,9 +53,24 @@ function startMusic() {
 function stopMusic() {
     if (audio) {
         audio.pause();
-        audio.currentTime = 0;
+        audio.currentTime = 0; // Đặt lại về đầu bài hát
         isPlaying = false;
         console.log('Nhạc đã dừng.');
+    }
+}
+
+// --- Fullscreen Function ---
+function requestFullscreen() {
+    const element = document.documentElement; // Lấy thẻ <html> để đưa toàn bộ trang vào chế độ full màn hình
+
+    if (element.requestFullscreen) {
+        element.requestFullscreen();
+    } else if (element.mozRequestFullScreen) { /* Firefox */
+        element.mozRequestFullScreen();
+    } else if (element.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        element.webkitRequestFullscreen();
+    } else if (element.msRequestFullscreen) { /* IE/Edge */
+        element.msRequestFullscreen();
     }
 }
 
@@ -167,6 +185,9 @@ function startAlbumInteraction() {
     
     startMusic();
     nextPage(); // Move to the first content page
+
+    // GỌI HÀM YÊU CẦU FULL MÀN HÌNH TẠI ĐÂY
+    requestFullscreen(); 
 }
 
 // --- Decorative Effects ---
@@ -222,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updatePageCounter();
-    updateNavButtons();
+    updateNavButtons(); // Hide buttons and counter initially
     createStars();
 
     setInterval(addFloatingHeart, 3000);
@@ -281,9 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     setupMusic();
 
+    // Tự động phát nhạc và yêu cầu full màn hình khi trang được tải VÀ người dùng tương tác lần đầu
+    // (ví dụ: click vào bất cứ đâu trên body hoặc nhấn nút "Bắt đầu câu chuyện")
     document.body.addEventListener('click', () => {
-        if (!isPlaying) {
+        if (!isPlaying) { 
             startMusic();
         }
+        // Gọi requestFullscreen() ở đây cũng được, nhưng gọi trong startAlbumInteraction()
+        // sẽ đảm bảo nó liên kết trực tiếp với hành động "Bắt đầu album"
     }, { once: true });
 });
