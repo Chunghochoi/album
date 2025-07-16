@@ -123,7 +123,7 @@ body {
 
     /* --- BỔ SUNG ĐỂ GIẢM NHẤP NHÁY VÀ TỐI ƯU RENDER --- */
     transform: translateZ(0); /* Buộc trình duyệt tạo lớp đồ họa riêng */
-    will-change: transform, z-index; /* Báo hiệu thuộc tính sẽ thay đổi */
+    will-change: transform, z-index, opacity; /* Báo hiệu thuộc tính sẽ thay đổi */
     perspective-origin: 50% 50%; /* Có thể giúp cải thiện render trên một số trình duyệt */
 }
 
@@ -185,8 +185,13 @@ body {
     opacity: 0;
     animation: fadeInUp 1.2s ease-out 0.3s forwards;
     position: relative;
-    z-index: 2;
+    z-index: 2; /* Giữ z-index cao để nó ở trên ảnh nền trang */
+
+    /* --- BỔ SUNG ĐỂ GIẢM NHẤP NHÁY TRÊN NỘI DUNG TỪNG TRANG --- */
+    transform: translateZ(0); /* Đảm bảo nội dung cũng được render trên GPU nếu cần thiết */
+    will-change: opacity, transform;
 }
+
 
 /* Page Image */
 .page-image {
@@ -332,11 +337,10 @@ body {
     -webkit-text-fill-color: white;
     background: none;
     animation: glow 2s ease-in-out infinite alternate;
-}
 
-@keyframes glow {
-    from { text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.5); }
-    to { text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 30px rgba(255,255,255,0.8); }
+    /* --- BỔ SUNG ĐỂ GIẢM NHẤP NHÁY TRÊN TIÊU ĐỀ BÌA --- */
+    transform: translateZ(0); /* Kích hoạt GPU acceleration cho riêng tiêu đề */
+    will-change: transform, opacity;
 }
 
 .cover-page .page-text {
@@ -345,6 +349,10 @@ body {
     margin-bottom: 40px;
     font-family: 'Dancing Script', cursive;
     font-weight: 600;
+
+    /* --- BỔ SUNG ĐỂ GIẢM NHẤP NHÁY TRÊN TEXT BÌA --- */
+    transform: translateZ(0); /* Kích hoạt GPU acceleration cho riêng text */
+    will-change: transform, opacity;
 }
 
 .cover-page .page-text::before,
@@ -547,6 +555,7 @@ body {
         align-items: center;
         justify-content: center;
         gap: 15px; /* Giảm khoảng cách giữa các phần tử */
+        transform: translateZ(0); /* Đảm bảo tối ưu trên mobile */
     }
 
     .page-image {
@@ -584,11 +593,13 @@ body {
     .cover-page .page-title {
         font-size: 3.5em; /* Vẫn giữ kích thước tương đối lớn cho bìa */
         margin-bottom: 25px;
+        transform: translateZ(0); /* Đảm bảo tối ưu trên mobile */
     }
 
     .cover-page .page-text {
         font-size: 1.2em;
         margin-bottom: 30px;
+        transform: translateZ(0); /* Đảm bảo tối ưu trên mobile */
     }
 
     .start-button {
@@ -637,6 +648,7 @@ body {
         flex-direction: row;
         align-items: center;
         gap: 20px; /* Giảm khoảng cách giữa ảnh và text */
+        transform: translateZ(0); /* Đảm bảo tối ưu trên mobile */
     }
 
     .page-image {
