@@ -1,0 +1,673 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
+
+/* Basic Reset and Body Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Playfair Display', serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Floating Hearts Background */
+.floating-hearts {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.heart {
+    position: absolute;
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.3);
+    animation: floatHeart 8s infinite linear;
+}
+
+@keyframes floatHeart {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Twinkling Stars */
+.stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 2s infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+/* Album Container */
+.album-container {
+    perspective: 1500px; /* Increased perspective for better 3D effect */
+    width: 90vw;
+    max-width: 800px; /* Tối ưu kích thước */
+    height: 80vh;
+    max-height: 600px; /* Tối ưu kích thước */
+    position: relative;
+    z-index: 10;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.3));
+}
+
+/* Album Book */
+.album-book {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+/* Page Styles */
+.page {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ffeef8 0%, #f8f4ff 50%, #fff5f5 100%);
+    border: 3px solid #d4af37;
+    border-radius: 15px;
+    box-shadow:
+        0 15px 35px rgba(0,0,0,0.3),
+        inset 0 0 20px rgba(255,255,255,0.5);
+    transform-origin: left center; /* Mặc định lật từ trái */
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    backface-visibility: hidden; /* Quan trọng để mặt sau không hiển thị */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    left: 0;
+    top: 0; /* Đảm bảo các trang xếp chồng lên nhau từ góc trên bên trái */
+    overflow: hidden; /* Đảm bảo nội dung không tràn ra ngoài */
+}
+
+.page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Trang chẵn sẽ lật từ phải */
+.page:nth-child(even) {
+    transform-origin: right center;
+}
+
+/* Đảm bảo các trang không phải bìa bắt đầu ở trạng thái không lật */
+.page:not(.cover-page) {
+    transform: rotateY(0deg);
+}
+
+/* Khi trang được lật */
+.page.flipped {
+    transform: rotateY(-180deg); /* Lật 180 độ */
+    /* Z-index sẽ được quản lý bởi JS thông qua các class khác */
+}
+
+/* Khi trang chẵn được lật */
+.page:nth-child(even).flipped {
+    transform: rotateY(180deg); /* Trang chẵn lật ngược lại (180 độ dương) */
+}
+
+/* --- Z-index management classes --- */
+/* Class tạm thời khi lật tiến (trang hiện tại đang lật) */
+.page.is-flipping-forward {
+    z-index: 999; /* Đảm bảo trang này ở trên cùng trong quá trình lật */
+}
+
+/* Class tạm thời khi lật lùi (trang cần hiển thị đang lật ngược lại) */
+.page.is-flipping-backward {
+    z-index: 999; /* Đảm bảo trang này ở trên cùng trong quá trình lật */
+}
+
+/* Page Content */
+.page-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeInUp 1.2s ease-out 0.3s forwards;
+    position: relative;
+    z-index: 2;
+}
+
+/* Page Image */
+.page-image {
+    width: 60%; /* Giảm kích thước ảnh một chút để nhường chỗ cho text */
+    max-width: 300px; /* Điều chỉnh max-width của ảnh */
+    height: auto;
+    border-radius: 20px;
+    box-shadow:
+        0 15px 35px rgba(0,0,0,0.2),
+        0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 25px; /* Giảm khoảng cách dưới ảnh */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 4px solid rgba(255,255,255,0.8);
+    position: relative;
+}
+
+.page-image::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #f0932b, #eb4d4b, #6c5ce7);
+    background-size: 400% 400%;
+    border-radius: 25px;
+    z-index: -1;
+    animation: gradientShift 4s ease infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.page-image:hover::after {
+    opacity: 0.7;
+}
+
+.page-image:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow:
+        0 25px 50px rgba(0,0,0,0.3),
+        0 10px 30px rgba(0,0,0,0.2);
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Page Title */
+.page-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.5em; /* Giảm từ 3em xuống 2.5em để có nhiều không gian hơn */
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 15px; /* Giảm khoảng cách dưới */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    word-wrap: break-word; /* Đảm bảo từ dài sẽ xuống dòng */
+    white-space: normal; /* Đảm bảo xuống dòng bình thường */
+}
+
+.page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px; /* Điều chỉnh vị trí đường gạch chân */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px; /* Giảm chiều rộng đường gạch chân */
+    height: 2px; /* Giảm độ dày đường gạch chân */
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 2px;
+}
+
+/* Page Text */
+.page-text {
+    font-size: 1.1em; /* Giảm từ 1.3em xuống 1.1em để có nhiều không gian hơn */
+    color: #34495e;
+    line-height: 1.6; /* Điều chỉnh line-height để các dòng không quá sát nhau */
+    max-width: 90%; /* Tăng max-width để sử dụng nhiều không gian hơn */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    font-style: italic;
+    text-align: center;
+    position: relative;
+    word-wrap: break-word; /* Đảm bảo từ dài sẽ xuống dòng */
+    white-space: normal; /* Đảm bảo xuống dòng bình thường */
+}
+
+.page-text::before,
+.page-text::after {
+    content: '"';
+    font-size: 2em;
+    color: #d4af37;
+    font-family: 'Dancing Script', cursive;
+    position: absolute;
+    top: -10px;
+}
+
+.page-text::before {
+    left: -20px;
+}
+
+.page-text::after {
+    right: -20px;
+    transform: rotate(180deg);
+}
+
+/* Cover Page Styles */
+.cover-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    color: white;
+    z-index: 100; /* Ensure cover is on top initially */
+    position: relative;
+    overflow: hidden;
+}
+
+.cover-page::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="hearts" patternUnits="userSpaceOnUse" width="20" height="20"><text x="10" y="15" text-anchor="middle" fill="rgba(255,255,255,0.1)" font-size="12">💕</text></pattern></defs><rect width="100" height="100" fill="url(%23hearts)"/></svg>');
+    opacity: 0.3;
+    animation: patternMove 20s linear infinite;
+}
+
+@keyframes patternMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(20px, 20px); }
+}
+
+.cover-page .page-title {
+    font-size: 4em;
+    color: #fff;
+    margin-bottom: 30px;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+    -webkit-text-fill-color: white;
+    background: none;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.5); }
+    to { text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 30px rgba(255,255,255,0.8); }
+}
+
+.cover-page .page-text {
+    font-size: 1.6em;
+    color: #f8f9fa;
+    margin-bottom: 40px;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 600;
+}
+
+.cover-page .page-text::before,
+.cover-page .page-text::after {
+    display: none;
+}
+
+/* Start Button */
+.start-button {
+    background: linear-gradient(45deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3)); /* Tăng opacity */
+    border: 2px solid rgba(255,255,255,0.9); /* Làm rõ đường viền */
+    color: #333; /* Đổi màu chữ thành màu tối hơn để dễ đọc trên nền sáng */
+    padding: 18px 35px;
+    font-size: 1.3em;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+    /* Thêm shadow để nổi bật hơn */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.start-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); /* Làm rõ hiệu ứng sáng */
+    transition: left 0.5s;
+}
+
+.start-button:hover::before {
+    left: 100%;
+}
+
+.start-button:hover {
+    background: linear-gradient(45deg, rgba(255,255,255,0.5), rgba(255,255,255,0.4)); /* Làm rõ hơn khi hover */
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); /* Tăng đổ bóng khi hover */
+}
+
+/* Navigation Buttons */
+.navigation {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%); /* Căn giữa cả ngang và dọc của album-container */
+    width: calc(100% + 100px); /* Kéo rộng ra hơn album */
+    left: 50%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px; /* Khoảng cách từ cạnh album */
+    z-index: 20;
+}
+
+.nav-btn {
+    background: linear-gradient(45deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3)); /* Tăng opacity */
+    border: 2px solid rgba(255,255,255,0.8); /* Làm rõ đường viền */
+    color: #333; /* Đổi màu chữ thành màu tối hơn để dễ đọc trên nền sáng */
+    padding: 12px 25px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+    /* Thêm shadow để nổi bật hơn */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); /* Làm rõ hiệu ứng sáng */
+    transition: left 0.5s;
+}
+
+.nav-btn:hover::before {
+    left: 100%;
+}
+
+.nav-btn:hover {
+    background: linear-gradient(45deg, rgba(255,255,255,0.5), rgba(255,255,255,0.4)); /* Làm rõ hơn khi hover */
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25); /* Tăng đổ bóng khi hover */
+}
+
+.nav-btn:disabled {
+    opacity: 0.6; /* Tăng độ rõ khi bị disabled */
+    cursor: not-allowed;
+    transform: none;
+    /* Giữ màu sắc như ban đầu để phân biệt rõ hơn */
+    background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+    border: 2px solid rgba(255,255,255,0.5);
+    color: #666; /* Màu chữ tối hơn một chút */
+    box-shadow: none;
+}
+
+.nav-btn:disabled:hover {
+    background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    box-shadow: none;
+}
+
+/* Page Counter */
+.page-counter {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: linear-gradient(45deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 600;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Sparkle Effect */
+.sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle, #fff 0%, transparent 70%);
+    border-radius: 50%;
+    animation: sparkleAnim 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes sparkleAnim {
+    0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+/* Love Decorations */
+.love-decoration {
+    position: absolute;
+    font-size: 2em;
+    color: rgba(255,255,255,0.6);
+    animation: float 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.love-decoration:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+.love-decoration:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
+.love-decoration:nth-child(3) { bottom: 15%; left: 15%; animation-delay: 2s; }
+.love-decoration:nth-child(4) { bottom: 10%; right: 10%; animation-delay: 1.5s; }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .album-container {
+        width: 95vw;
+        height: 90vh;
+        max-height: 90vh; /* Đảm bảo không quá cao trên mobile */
+    }
+
+    .page {
+        padding: 20px; /* Giảm padding trên mobile */
+    }
+
+    .page-title {
+        font-size: 2.2em; /* Điều chỉnh cho mobile */
+        margin-bottom: 10px;
+    }
+
+    .page-text {
+        font-size: 1em; /* Điều chỉnh cho mobile */
+        max-width: 95%;
+        line-height: 1.5;
+    }
+
+    .page-image {
+        width: 75%; /* Tối ưu ảnh cho mobile */
+        max-width: 280px;
+        margin-bottom: 20px;
+    }
+
+    .cover-page .page-title {
+        font-size: 3em; /* Vẫn giữ kích thước tương đối lớn cho bìa */
+    }
+
+    .cover-page .page-text {
+        font-size: 1.3em;
+    }
+
+    .navigation {
+        width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng */
+        padding: 0 10px; /* Giảm padding trên mobile */
+        top: auto; /* Bỏ top: 50% */
+        bottom: 20px; /* Đặt lại về dưới cùng */
+        transform: translateX(-50%); /* Căn giữa theo chiều ngang */
+    }
+
+    .nav-btn {
+        padding: 10px 18px; /* Giảm padding nút trên mobile */
+        font-size: 0.9em; /* Giảm font size nút trên mobile */
+    }
+
+    .page-counter {
+        top: 15px;
+        right: 15px;
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .album-container {
+        width: 95vw;
+        height: 95vh;
+        max-height: 95vh;
+    }
+
+    .page {
+        padding: 15px; /* Giảm padding thêm cho ngang */
+        flex-direction: row;
+        text-align: left;
+    }
+
+    .page-content {
+        flex-direction: row;
+        align-items: center;
+        gap: 20px; /* Giảm khoảng cách giữa ảnh và text */
+    }
+
+    .page-image {
+        width: 40%; /* Giảm kích thước ảnh để nhường chỗ cho text */
+        max-width: 200px; /* Giảm max-width của ảnh */
+        margin-bottom: 0;
+    }
+
+    .text-content {
+        flex: 1;
+        text-align: left;
+    }
+
+    .page-title {
+        font-size: 1.8em; /* Giảm kích thước cho landscape */
+        margin-bottom: 10px;
+    }
+
+    .page-text {
+        font-size: 0.9em; /* Giảm kích thước text cho landscape */
+        max-width: 100%;
+        line-height: 1.4;
+    }
+
+    .navigation {
+        bottom: 15px; /* Giữ ở dưới cùng cho landscape */
+        padding: 0 10px;
+    }
+    .nav-btn {
+        font-size: 0.9em;
+        padding: 8px 15px;
+    }
+    
+    .page-counter {
+        top: 15px;
+        right: 15px;
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+}
+
+/* Adjustments for even smaller screens (e.g., small phones in portrait) */
+@media (max-width: 480px) {
+    .page {
+        padding: 15px;
+    }
+
+    .page-title {
+        font-size: 1.8em;
+    }
+
+    .page-text {
+        font-size: 0.9em;
+        line-height: 1.4;
+    }
+
+    .page-image {
+        width: 80%;
+        max-width: 250px;
+        margin-bottom: 15px;
+    }
+
+    .cover-page .page-title {
+        font-size: 2.5em;
+    }
+
+    .cover-page .page-text {
+        font-size: 1.1em;
+    }
+
+    .start-button {
+        padding: 15px 30px;
+        font-size: 1.1em;
+    }
+    
+    .page-counter, .navigation .nav-btn {
+        font-size: 0.8em; /* Nhỏ hơn nữa cho màn hình rất nhỏ */
+        padding: 7px 12px;
+    }
+}
